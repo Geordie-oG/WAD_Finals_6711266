@@ -28,13 +28,6 @@ All six dedicated demonstration accounts use password **`Learn2026!`**. These ar
 - Frontend source: https://github.com/Geordie-oG/WAD_Finals_6711266/tree/main/react-frontend
 - Backend URL: https://wad-finals-6711266-backend.vercel.app
 - Frontend URL: https://wad-finals-6711266-frontend.vercel.app
-- Screen recording: supplied separately by the student in the examination submission.
-
-## Prerequisites
-
-- Node.js 22.12+ or Node.js 24, and npm.
-- MongoDB Atlas connection with permission to read/write the dedicated exam database, and network access from the backend host.
-- Two terminal windows for local frontend/backend servers.
 
 ## 1. Backend setup
 
