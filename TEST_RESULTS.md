@@ -41,4 +41,3 @@ See `next-backend/scripts/smoke-test.mjs` for exact executable assertions. The s
 ## Submission still requiring student action
 
 The student's full-screen + camera recording and its shareable upload link must be supplied separately. No claim is made that recording was started or captured by the application or this verification.
-
