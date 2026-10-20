@@ -1,14 +1,45 @@
-//src/context/UseContext.jsx
-
-import { createContext, useEffect, useRef, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-export const UserContext = createContext();
-
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useEffect, useState } from "react";
+import { api } from "../lib/api";
+export const UserContext = createContext(null);
 export function UserProvider({ children }) {
-
-  /**
-   * Your User Context Provider for Frontend goes here
-   */
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    api("/auth/me")
+      .then((data) => {
+        if (active) setUser(data.user);
+      })
+      .catch(() => {
+        sessionStorage.removeItem("course-token");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  async function login(identifier, password) {
+    const data = await api("/auth/login", {
+      method: "POST",
+      body: { identifier, password },
+    });
+    sessionStorage.setItem("course-token", data.token);
+    setUser(data.user);
+  }
+  async function logout() {
+    try {
+      await api("/auth/logout", { method: "POST" });
+    } finally {
+      sessionStorage.removeItem("course-token");
+      setUser(null);
+    }
+  }
+  return (
+    <UserContext.Provider value={{ user, loading, login, logout }}>
+      {children}
+    </UserContext.Provider>
+  );
 }

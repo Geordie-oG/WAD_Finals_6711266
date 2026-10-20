@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 .env*
+
+# Commit templates only, never private environment files
+!.env.example
+.vercel

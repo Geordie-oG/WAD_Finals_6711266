@@ -6,34 +6,27 @@ import {
   X_HEADER_USER_ID,
   X_HEADER_USER_NAME,
 } from "./lib/constant";
-
 export function proxy(request) {
+  if (request.method === "OPTIONS")
+    return new NextResponse(null, { status: 204, headers: corsHeaders });
   const user = verifyJWT(request);
-
-  if (!user) {
+  if (!user)
     return NextResponse.json(
-      {
-        message: "Unauthorized Request",
-      },
-      {
-        status: 401,
-        headers: corsHeaders,
-      },
+      { message: "Please sign in to continue." },
+      { status: 401, headers: corsHeaders },
     );
-  }
-
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(X_HEADER_USER_ID, user.id);
-  requestHeaders.set(X_HEADER_USER_EMAIL, user.email);
-  requestHeaders.set(X_HEADER_USER_NAME, user.username);
-
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  const headers = new Headers(request.headers);
+  // Never trust caller-supplied identity headers. Handlers also revalidate the DB user.
+  headers.delete(X_HEADER_USER_EMAIL);
+  headers.delete(X_HEADER_USER_NAME);
+  headers.set(X_HEADER_USER_ID, user.id);
+  return NextResponse.next({ request: { headers } });
 }
-
 export const config = {
-  matcher: [],
+  matcher: [
+    "/api/course/:path*",
+    "/api/user/:path*",
+    "/api/enrollment/:path*",
+    "/api/auth/me",
+  ],
 };
