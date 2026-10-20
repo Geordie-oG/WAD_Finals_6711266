@@ -67,7 +67,7 @@ function Layout() {
         <Outlet />
       </main>
       <footer>
-        CourseSpace · Online Course Service <span>CSX4107 · 6711266</span>
+        CourseSpace · Online Course Service <span>WAD_Finals 6711266</span>
       </footer>
     </>
   );
@@ -114,7 +114,7 @@ function Login() {
             <span>Teach what you love</span>
           </div>
         </div>
-        <small>ONLINE COURSE SERVICE · CSX4107</small>
+        <small>ONLINE COURSE SERVICE · WAD_Finals</small>
       </section>
       <section className="login-form">
         <div className="login-card">

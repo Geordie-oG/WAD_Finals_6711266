@@ -151,6 +151,8 @@ For a deployed backend:
 node --env-file=.env.local scripts/smoke-test.mjs https://YOUR-BACKEND.vercel.app/api
 ```
 
+Verified results: **72/72 checks passed locally and 72/72 passed on the deployed backend**. Both apps passed lint and production builds. Live browser checks cover Teacher creation/editing, Student enrollment, My learning, and session persistence. See `TEST_RESULTS.md` for the verification record and `SUBMISSION.md` for hand-in steps.
+
 The integration script covers unauthorized requests, all six logins, cookie/Bearer sessions, role/ownership restrictions, validation, course statuses, filtering, rosters, duplicate/full enrollment, concurrent last-seat and duplicate enrollment, deletion restrictions, CORS and logout. It creates uniquely named QA courses and cleans up only those course ids in the dedicated exam database. It does not alter seeded courses or existing student enrollments. The local environment must refer to the same database as the tested backend for cleanup.
 
 ## 7. Vercel deployment
