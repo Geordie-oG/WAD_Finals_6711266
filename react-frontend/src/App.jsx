@@ -128,7 +128,7 @@ function Login() {
               <input
                 name="identifier"
                 autoComplete="username"
-                placeholder="e.g. student1"
+                placeholder="e.g. student1@courses.test"
                 required
               />
             </label>
@@ -286,7 +286,9 @@ function Courses({ enrolled = false }) {
           <p>
             {enrolled
               ? "Explore courses and enroll to start learning."
-              : "Try another search or create your first course."}
+              : teacher
+                ? "Try another search or create your first course."
+                : "Try a different course or Teacher name."}
           </p>
           {enrolled && (
             <Link className="button primary" to="/courses">
@@ -643,7 +645,11 @@ function CourseDetail() {
                   <p className="muted">
                     {course.isEnrolled
                       ? "This course is in your learning list."
-                      : "Your seat is confirmed as soon as you enroll."}
+                      : course.status !== "Open"
+                        ? "This course is currently closed for enrollment."
+                        : remaining <= 0
+                          ? "All seats have been taken. Please choose another course."
+                          : "Your seat is confirmed as soon as you enroll."}
                   </p>
                 </>
               )}

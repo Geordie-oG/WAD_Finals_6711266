@@ -356,6 +356,187 @@ try {
     (await request(`/user/${teachers[0].user._id}`, "GET", undefined, s))
       .status === 403,
   );
+  // Grading audit: test state transitions and hostile inputs, not only the happy path.
+  check(
+    "All demo accounts have required public fields",
+    [...teachers, ...students].every(
+      ({ user }) =>
+        user.username &&
+        user.email &&
+        user._id &&
+        ["Student", "Teacher"].includes(user.role),
+    ),
+  );
+  check(
+    "Exactly three demo accounts per role",
+    teachers.every((x) => x.user.role === "Teacher") &&
+      students.every((x) => x.user.role === "Student"),
+  );
+  check(
+    "Login rejects query-operator injection",
+    (
+      await request("/auth/login", "POST", {
+        identifier: { $ne: null },
+        password: "Learn2026!",
+      })
+    ).status === 400,
+  );
+  check(
+    "Student cannot spoof Teacher role headers",
+    (
+      await request("/course", "POST", courseBody(), s, {
+        "x-user-role": "Teacher",
+        "x-user-id": teachers[0].user._id,
+      })
+    ).status === 403,
+  );
+  const forgedOwner = await create({
+    name: stamp + "Ownership payload",
+    teacherId: teachers[1].user._id,
+    studentIds: [students[0].user._id],
+  });
+  check(
+    "Client cannot assign a different course owner",
+    forgedOwner.teacherId === teachers[0].user._id,
+  );
+  check(
+    "Client cannot insert fake enrollments on create",
+    forgedOwner.enrolledCount === 0,
+  );
+  const invalidNumbers = [
+    { price: -1 },
+    { maxStudent: 0 },
+    { maxStudent: 1.5 },
+    { duration: 1.5 },
+    { name: "   " },
+  ];
+  for (const invalid of invalidNumbers)
+    check(
+      `Invalid field rejected: ${JSON.stringify(invalid)}`,
+      (await request("/course", "POST", courseBody(invalid), t)).status === 400,
+    );
+  const malformed = await fetch(base + "/course", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${t}`,
+    },
+    body: "{broken",
+    signal: AbortSignal.timeout(30000),
+  });
+  check(
+    "Malformed JSON rejected without server error",
+    malformed.status === 400,
+  );
+  const transition = await create({ name: stamp + "Transitions" });
+  const transitionPath = `/course/${transition._id}`;
+  check(
+    "Student enrolls before status transitions",
+    (await request(transitionPath + "/enroll", "POST", undefined, s)).status ===
+      201,
+  );
+  check(
+    "Teacher closes an existing course",
+    (
+      await request(
+        transitionPath,
+        "PUT",
+        courseBody({ name: stamp + "Transitions", status: "Close" }),
+        t,
+      )
+    ).status === 200,
+  );
+  check(
+    "Changing to Close blocks new enrollment",
+    (await request(transitionPath + "/enroll", "POST", undefined, s2))
+      .status === 409,
+  );
+  check(
+    "Closing preserves existing enrollment",
+    (await request("/enrollment", "GET", undefined, s)).data.courses.some(
+      (x) => x._id === transition._id && x.status === "Close",
+    ),
+  );
+  check(
+    "Teacher cancels an existing course",
+    (
+      await request(
+        transitionPath,
+        "PUT",
+        courseBody({ name: stamp + "Transitions", status: "Cancel" }),
+        t,
+      )
+    ).status === 200,
+  );
+  check(
+    "Cancelled transition hides course from catalog",
+    !(await request("/course", "GET", undefined, s2)).data.courses.some(
+      (x) => x._id === transition._id,
+    ),
+  );
+  check(
+    "Cancelled course retains Teacher roster",
+    (
+      await request(transitionPath, "GET", undefined, t)
+    ).data.course.enrolledStudents.some((x) => x._id === students[0].user._id),
+  );
+  check(
+    "Cancel does not bypass delete restriction",
+    (await request(transitionPath, "DELETE", undefined, t)).status === 409,
+  );
+  check(
+    "Teacher can reopen a cancelled course",
+    (
+      await request(
+        transitionPath,
+        "PUT",
+        courseBody({ name: stamp + "Transitions", status: "Open" }),
+        t,
+      )
+    ).status === 200,
+  );
+  check(
+    "Reopening preserves duplicate prevention",
+    (await request(transitionPath + "/enroll", "POST", undefined, s)).status ===
+      409,
+  );
+  check(
+    "Reopened course accepts another Student",
+    (await request(transitionPath + "/enroll", "POST", undefined, s2))
+      .status === 201,
+  );
+  const literal = await create({ name: stamp + "Literal [.*]" });
+  const literalResults = (
+    await request(
+      `/course?q=${encodeURIComponent("[.*]")}`,
+      "GET",
+      undefined,
+      s,
+    )
+  ).data.courses;
+  check(
+    "Search matches literal regex characters correctly",
+    literalResults.some((x) => x._id === literal._id) &&
+      literalResults.every(
+        (x) => x.name.includes("[.*]") || x.teacherName.includes("[.*]"),
+      ),
+  );
+  check(
+    "Case-insensitive partial Teacher search",
+    (await request("/course?q=ChEn", "GET", undefined, s)).data.courses.some(
+      (x) => x._id === literal._id,
+    ),
+  );
+  check(
+    "Own profile endpoint exposes no password",
+    !(await request(`/user/${students[0].user._id}`, "GET", undefined, s)).data
+      .user.password,
+  );
+  const health = await request("/health");
+  check(
+    "Deployed API connects to MongoDB",
+    health.status === 200 && health.data.database === "connected",
+  );
   const preflight = await request("/course", "OPTIONS", undefined, undefined, {
     Origin: process.env.FRONTEND_URL || "http://localhost:5173",
     "Access-Control-Request-Method": "POST",

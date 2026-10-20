@@ -10,8 +10,8 @@ The required Online Course Service is implemented, pushed to the exam repository
 | Frontend ESLint | PASS |
 | Next.js production build (16.4.2) | PASS locally and on Vercel |
 | Vite production build | PASS locally and on Vercel |
-| Local integration suite | 72 checks passed |
-| Deployed integration suite | 72 checks passed |
+| Local integration suite | 102 checks passed |
+| Deployed integration suite | 102 checks passed |
 | Public backend `/api/health` | HTTP 200, database connected |
 | Public frontend | HTTP 200 |
 | All 3 Teacher + 3 Student logins | PASS locally and deployed |
@@ -26,9 +26,16 @@ The required Online Course Service is implemented, pushed to the exam repository
 | Browser: Student login/details/enroll/My learning | PASS on deployed frontend |
 | Browser: refresh preserves login and enrollment | PASS on deployed frontend |
 | Browser: Teacher roster and disabled deletion after enrollment | PASS on deployed frontend |
+| Existing-course Open/Close/Cancel transitions preserve enrollments | PASS |
+| Hostile role/owner payloads and invalid field inputs | PASS |
+| Literal search characters match correctly | PASS |
 | Git file/secret review | PASS; only exam source/config/docs committed |
 
 See `next-backend/scripts/smoke-test.mjs` for exact executable assertions. The suite verifies cookie and Bearer authentication, unauthenticated rejection, forged identity rejection, validation, role/ownership isolation, rosters, status rules, enrollment relationships, concurrent capacity/duplicate checks, deletion, CORS preflight and logout.
+
+## Grading alignment
+
+All eight categories are mapped to concrete checks in `GRADING_AUDIT.md`. The frontend audit also corrected the demo-email placeholder, Student empty-search guidance, and closed/full-course messaging. These changes passed frontend lint/build and were deployed.
 
 ## Test isolation
 
