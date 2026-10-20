@@ -114,7 +114,7 @@ function Login() {
             <span>Teach what you love</span>
           </div>
         </div>
-        <small>ONLINE COURSE SERVICE · WAD_Finals</small>
+        <small> WAD_Finals_6711266</small>
       </section>
       <section className="login-form">
         <div className="login-card">
